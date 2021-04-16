@@ -8,6 +8,7 @@ Examples
 """
 from datetime import datetime
 import os
+from typing import Union
 from shapely.geometry import Point, MultiPoint
 import numpy as np
 import pandas as pd
@@ -107,7 +108,7 @@ class PointObservation(Observation):
     def __init__(
         self,
         filename,
-        item: int = 0,
+        item: Union[int, str] = 0,
         x: float = None,
         y: float = None,
         z: float = None,
@@ -146,9 +147,10 @@ class PointObservation(Observation):
     @staticmethod
     def _read_dfs0(dfs, item):
         """Read data from dfs0 file"""
-        df = dfs.read(items=item).to_dataframe()
+        ds = dfs.read(items=item)
+        df = ds.to_dataframe()
         df.dropna(inplace=True)
-        return df, dfs.items[item]
+        return df, ds.items[0]
 
     def plot(self, **kwargs):
         """plot timeseries"""
