@@ -76,7 +76,10 @@ class Observation:
     def _unit_text(self):
         if self.itemInfo is None:
             return ""
-        txt = f"{self.itemInfo.type.display_name}"
+        if self.variable_name is None:
+            txt = f"{self.itemInfo.type.display_name}"
+        else:
+            txt = self.variable_name
         if self.itemInfo.type != eum.EUMType.Undefined:
             unit = self.itemInfo.unit.display_name
             txt = f"{txt} [{unit_display_name(unit)}]"
