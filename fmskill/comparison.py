@@ -100,11 +100,6 @@ class BaseComparer:
         return self.observation.name
 
     @property
-    def residual(self):
-        # TODO
-        return self.mod - np.vstack(self.obs)
-
-    @property
     def obs(self) -> np.ndarray:
         return self.df[self.obs_name].values
 
@@ -979,6 +974,10 @@ class BaseComparer:
 
 
 class SingleObsComparer(BaseComparer):
+    @property
+    def residual(self) -> pd.DataFrame:
+        return self.df[self.mod_names].subtract(self.df[self.obs_name], axis=0)
+
     def __copy__(self):
         # cls = self.__class__
         # cp = cls.__new__(cls)
@@ -1293,6 +1292,55 @@ class SingleObsComparer(BaseComparer):
         plt.hist(self.residual, bins=bins, color=self._resi_color)
         plt.title(f"Residuals, {self.name}")
         plt.xlabel(f"Residuals of {self._obs_unit_text}")
+
+    def plot_residual_timeseries(
+        self,
+        title=None,
+        ylim=None,
+        figsize=None,
+        pos_color="red",
+        neg_color="blue",
+        backend="matplotlib",
+        **kwargs,
+    ):
+
+        if title is None:
+            title = f"Residuals  - {self.name}"
+
+        if backend == "matplotlib":
+            import matplotlib.dates as mdates
+
+            _, ax = plt.subplots(figsize=figsize)
+            tmp = self.residual
+
+            locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+            formatter = mdates.ConciseDateFormatter(locator)
+            ax.xaxis.set_major_locator(locator)
+            ax.xaxis.set_major_formatter(formatter)
+            ax.fill_between(
+                tmp.index,
+                0.0,
+                tmp.values[:, 0],
+                where=tmp.values[:, 0] > 0.0,
+                interpolate=True,
+                color=pos_color,
+            )
+            plt.fill_between(
+                tmp.index,
+                tmp.values[:, 0],
+                0,
+                where=tmp.values[:, 0] < 0.0,
+                interpolate=True,
+                color=neg_color,
+            )
+
+            ax.set_ylabel(self._obs_unit_text)
+            ax.set_ylim(ylim)
+            plt.title(title)
+            return ax
+
+        else:
+            raise ValueError(f"Plotting backend: {backend} not supported")
 
     def hist(self, model=None, bins=100):
         """Plot histogram of model data and observations.
